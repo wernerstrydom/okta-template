@@ -15,18 +15,23 @@ pipeline {
         stage('Plan') {
             agent any
             when {
-                branch 'master'
+                branch 'main'
             }
             steps {
-                sh 'terraform -v'         
-                sh 'terraform init'
-                sh 'terraform plan -input=false'
+                sh 'rm -Rf tools/'
+                sh 'mkdir -p tmp tools'
+                sh 'curl -o tmp/terraform.zip https://releases.hashicorp.com/terraform/1.0.5/terraform_1.0.5_linux_amd64.zip'
+                sh 'unzip tmp/terraform.zip -d tools'
+                sh 'chmod u+x tools/terraform'
+                sh 'tools/terraform -v'         
+                sh 'tools/terraform init'
+                sh 'tools/terraform plan -input=false'
             }
         }
         stage('Promote') {
             agent any 
             when {
-                branch 'master'
+                branch 'main'
             }
             steps {
                 timeout(time: 60, unit: 'MINUTES') {
@@ -37,12 +42,12 @@ pipeline {
         stage('Apply') {
             agent any
             when {
-                branch 'master'
+                branch 'main'
             }
             steps {
-                sh 'terraform -v'         
-                sh 'terraform init'
-                sh 'terraform apply -input=false -auto-approve'
+                sh 'tools/terraform -v'         
+                sh 'tools/terraform init'
+                sh 'tools/terraform apply -input=false -auto-approve'
             }
         }
     }
